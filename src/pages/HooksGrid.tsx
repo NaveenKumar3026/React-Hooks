@@ -1,104 +1,147 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const hooks = [
   {
     name: "useState",
     icon: "🔄",
     tagline: "State Management",
-    description: "Store and update changing data inside components. The most fundamental hook for building interactive UIs.",
-    examples: "Password toggle, Like button, Form inputs, Modals",
+    description: "Store and update dynamic data inside components. The most fundamental hook — the backbone of every interactive React app.",
+    examples: "Password toggle • Shopping Cart • Like Button • Forms",
     path: "/hooks/usestate",
-    gradient: "from-primary/20 via-primary/5 to-transparent",
-    borderGlow: "group-hover:shadow-[0_0_30px_hsl(193_92%_55%/0.2)]",
+    glowColor: "193 92% 55%",
+    accentClass: "text-primary",
+    number: "01",
   },
   {
     name: "useEffect",
     icon: "⚡",
-    tagline: "Side Effects",
-    description: "Run code after rendering — API calls, timers, localStorage, event listeners, and more.",
-    examples: "Live search, Theme persistence, Data fetching",
+    tagline: "Side Effects & Lifecycle",
+    description: "Run code after rendering — API calls, event listeners, timers, localStorage. React's bridge to the outside world.",
+    examples: "Live Search • Theme Save • Event Tracker • API Fetch",
     path: "/hooks/useeffect",
-    gradient: "from-secondary/20 via-secondary/5 to-transparent",
-    borderGlow: "group-hover:shadow-[0_0_30px_hsl(270_70%_60%/0.2)]",
+    glowColor: "270 70% 60%",
+    accentClass: "text-secondary",
+    number: "02",
   },
   {
     name: "useRef",
     icon: "🎯",
-    tagline: "DOM & Persistence",
-    description: "Access DOM elements directly and store mutable values that persist without causing re-renders.",
-    examples: "Scroll to section, Stopwatch, Focus input",
+    tagline: "DOM Access & Persistence",
+    description: "Access DOM elements directly and store mutable values that persist across renders without triggering re-renders.",
+    examples: "Scroll to Section • Stopwatch • Focus Input • Canvas",
     path: "/hooks/useref",
-    gradient: "from-accent/20 via-accent/5 to-transparent",
-    borderGlow: "group-hover:shadow-[0_0_30px_hsl(51_97%_55%/0.2)]",
+    glowColor: "51 97% 55%",
+    accentClass: "text-accent",
+    number: "03",
   },
   {
     name: "useContext",
     icon: "🌐",
-    tagline: "Global State",
-    description: "Share data across multiple components without prop drilling — like a global state any child can access.",
-    examples: "Language switcher, Theme context, Auth state",
+    tagline: "Global State Sharing",
+    description: "Share data across the entire component tree without prop drilling — theme, auth, language, and more.",
+    examples: "Language Switcher • Theme Context • Auth State",
     path: "/hooks/usecontext",
-    gradient: "from-pink-500/15 via-primary/5 to-transparent",
-    borderGlow: "group-hover:shadow-[0_0_30px_hsl(330_80%_60%/0.2)]",
+    glowColor: "330 80% 60%",
+    accentClass: "text-pink-400",
+    number: "04",
   },
 ];
 
 const HooksGrid = () => {
   const navigate = useNavigate();
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
     <div className="relative min-h-screen px-4 py-12 overflow-hidden">
-      <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-primary/5 blur-[120px]" />
-      <div className="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-secondary/5 blur-[100px]" />
+      {/* Background effects */}
+      <div className="absolute top-0 right-[20%] h-[500px] w-[500px] rounded-full bg-primary/5 blur-[150px]" />
+      <div className="absolute bottom-[10%] left-[10%] h-[400px] w-[400px] rounded-full bg-secondary/5 blur-[120px]" />
+      <div className="absolute top-[40%] left-[50%] h-[300px] w-[300px] rounded-full bg-accent/3 blur-[100px]" />
 
-      <div className="relative z-10 mx-auto max-w-4xl">
+      <div className="relative z-10 mx-auto max-w-5xl">
         <button
           onClick={() => navigate("/")}
-          className="mb-8 flex items-center gap-2 font-body text-sm text-muted-foreground transition-colors hover:text-primary"
+          className="mb-8 flex items-center gap-2 font-body text-sm text-muted-foreground transition-colors hover:text-primary group"
         >
-          <span>←</span> Back to Home
+          <span className="transition-transform group-hover:-translate-x-1">←</span> Back to Home
         </button>
 
-        <div className="mb-10 text-center">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-4 py-1.5">
+        <div className="mb-12 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-gradient-to-r from-primary/10 to-secondary/10 px-5 py-2 backdrop-blur-sm">
             <span className="text-sm">📚</span>
-            <span className="font-mono text-xs text-muted-foreground">4 Hooks • Interactive Demos</span>
+            <span className="font-mono text-xs text-primary">4 Hooks • 8+ Demos • 20+ Interview Q&A</span>
           </div>
-          <h1 className="mb-3 font-display text-4xl font-bold md:text-5xl">
-            Choose a <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Hook</span>
+          <h1 className="mb-4 font-display text-4xl font-bold md:text-6xl">
+            Choose a{" "}
+            <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              Hook
+            </span>
           </h1>
-          <p className="text-muted-foreground">
-            Click any card to explore with live demos, code examples, and interview tips
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            Each card takes you to a deep dive with explanations, syntax, live demos, code examples, and interview preparation
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {hooks.map((hook, i) => (
             <div
               key={hook.name}
               onClick={() => navigate(hook.path)}
-              className={`lightning-card group ${hook.borderGlow}`}
-              style={{ animationDelay: `${i * 100}ms` }}
+              onMouseEnter={() => setHoveredIndex(i)}
+              onMouseLeave={() => setHoveredIndex(null)}
+              className="lightning-card group"
             >
-              <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${hook.gradient} opacity-0 transition-opacity duration-300 group-hover:opacity-100`} />
+              {/* Glow effect on hover */}
+              <div
+                className="absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                style={{
+                  background: `radial-gradient(circle at 50% 50%, hsl(${hook.glowColor} / 0.1), transparent 70%)`,
+                }}
+              />
+
               <div className="relative z-10">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-4xl">{hook.icon}</span>
-                  <span className="section-badge border-border text-muted-foreground">
+                {/* Header */}
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className={`text-4xl transition-transform duration-500 ${hoveredIndex === i ? "scale-125 rotate-12" : ""}`}>
+                      {hook.icon}
+                    </span>
+                    <span className="font-mono text-xs text-muted-foreground/40 font-bold">{hook.number}</span>
+                  </div>
+                  <span className="section-badge border-border bg-muted/40 text-muted-foreground text-xs">
                     {hook.tagline}
                   </span>
                 </div>
-                <h2 className="mb-2 font-display text-2xl font-bold">{hook.name}</h2>
-                <p className="mb-3 font-body text-sm text-muted-foreground leading-relaxed">{hook.description}</p>
-                <p className="font-mono text-xs text-primary/60">{hook.examples}</p>
+
+                {/* Name */}
+                <h2 className={`mb-2 font-display text-2xl font-bold transition-colors duration-300 ${hoveredIndex === i ? hook.accentClass : "text-foreground"}`}>
+                  {hook.name}
+                </h2>
+
+                {/* Description */}
+                <p className="mb-4 font-body text-sm text-muted-foreground leading-relaxed">
+                  {hook.description}
+                </p>
+
+                {/* Examples */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground/50">📌</span>
+                  <p className="font-mono text-xs text-muted-foreground/60">{hook.examples}</p>
+                </div>
+
+                {/* Explore arrow */}
+                <div className={`mt-4 flex items-center gap-2 text-sm font-semibold transition-all duration-300 ${hoveredIndex === i ? `${hook.accentClass} translate-x-1` : "text-muted-foreground/40"}`}>
+                  Explore →
+                </div>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-10 text-center">
-          <p className="text-xs text-muted-foreground/50">
-            💡 Tip: Each hook page contains theory, syntax, live demos, common mistakes, and interview questions
+        <div className="mt-12 text-center">
+          <p className="text-xs text-muted-foreground/40 max-w-md mx-auto">
+            💡 Each hook page contains: Theory & Concepts • Syntax Guide • Code Examples • Live Interactive Demos • Common Mistakes • Interview Questions & Answers
           </p>
         </div>
       </div>
