@@ -55,46 +55,35 @@ function StopwatchDemo() {
     };
   }, [isRunning]);
 
-  // Why useRef and not useState for interval?
-  // Because storing interval ID in state would
-  // cause an unnecessary re-render every time
-  // we start/stop the timer!
-
   const formatTime = (ms) => {
     const mins = Math.floor(ms / 60000);
     const secs = Math.floor((ms % 60000) / 1000);
     const centis = Math.floor((ms % 1000) / 10);
     return \`\${mins}:\${secs}.\${centis}\`;
   };
-
-  return (
-    <div>
-      <h2>{formatTime(time)}</h2>
-      <button onClick={() => setIsRunning(true)}>
-        Start
-      </button>
-      <button onClick={() => setIsRunning(false)}>
-        Stop
-      </button>
-      <button onClick={() => {
-        setIsRunning(false);
-        setTime(0);
-      }}>
-        Reset
-      </button>
-    </div>
-  );
 }`;
 
 function FocusAndScrollDemo() {
   const inputRef = useRef<HTMLInputElement>(null);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [activeSection, setActiveSection] = useState<number | null>(null);
+  const [inputFocused, setInputFocused] = useState(false);
 
   const sections = [
     { title: "🏠 Home", desc: "Welcome section with hero content", gradient: "from-primary/10 to-primary/3" },
     { title: "📦 Products", desc: "Product catalog and listings", gradient: "from-secondary/10 to-secondary/3" },
     { title: "📬 Contact", desc: "Get in touch and support", gradient: "from-accent/10 to-accent/3" },
   ];
+
+  const handleFocus = () => {
+    inputRef.current?.focus();
+    setInputFocused(true);
+  };
+
+  const handleScroll = (i: number) => {
+    sectionRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setActiveSection(i);
+  };
 
   return (
     <div className="demo-container">
@@ -109,15 +98,17 @@ function FocusAndScrollDemo() {
       </p>
 
       <div className="flex gap-2 mb-4 flex-wrap">
-        <button onClick={() => inputRef.current?.focus()} className="glow-button text-sm px-4 py-2.5">
+        <button onClick={handleFocus} className="glow-button text-sm px-4 py-2.5">
           🎯 Focus Search
         </button>
         {sections.map((s, i) => (
           <button
             key={i}
-            onClick={() => sectionRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "center" })}
-            className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold hover:border-primary/40 transition-all duration-300"
-            style={{ background: "linear-gradient(135deg, hsl(225 25% 10% / 0.6), hsl(225 30% 8%))" }}
+            onClick={() => handleScroll(i)}
+            className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
+              activeSection === i ? "border-primary/50 bg-primary/10 text-primary" : "border-border hover:border-primary/40"
+            }`}
+            style={{ background: activeSection !== i ? "linear-gradient(135deg, hsl(225 25% 10% / 0.6), hsl(225 30% 8%))" : undefined }}
           >
             {s.title}
           </button>
@@ -129,6 +120,8 @@ function FocusAndScrollDemo() {
         type="text"
         placeholder="🔍 This input gets focused via useRef..."
         className="demo-input mb-4"
+        onFocus={() => setInputFocused(true)}
+        onBlur={() => setInputFocused(false)}
       />
 
       <div className="space-y-3 max-h-52 overflow-y-auto rounded-xl border border-border p-3" style={{ background: "hsl(225 25% 7% / 0.5)" }}>
@@ -140,13 +133,11 @@ function FocusAndScrollDemo() {
           >
             <h4 className="font-display text-lg font-semibold">{s.title}</h4>
             <p className="text-sm text-muted-foreground mt-1">{s.desc}</p>
-            <p className="text-xs text-primary/60 mt-2 font-mono">
-              ref.current.scrollIntoView({"{"} behavior: "smooth" {"}"})
-            </p>
           </div>
         ))}
       </div>
 
+      {/* REACTIVE CODE */}
       <div className="code-window mt-4">
         <div className="code-window-header">
           <div className="code-window-dots">
@@ -154,19 +145,33 @@ function FocusAndScrollDemo() {
             <span className="bg-accent/60" />
             <span className="bg-green-500/60" />
           </div>
-          <span className="font-mono text-xs text-muted-foreground ml-2">DOM Access via Ref</span>
+          <span className="font-mono text-xs text-muted-foreground ml-2">🔴 Live — Click buttons to see ref actions!</span>
         </div>
         <div className="code-window-body">
           <p><span className="text-secondary">const</span> inputRef = <span className="text-primary">useRef</span>(<span className="text-accent">null</span>);</p>
-          <p>inputRef.<span className="text-accent">current</span> = <span className="text-primary">&lt;input /&gt;</span> <span className="text-muted-foreground">// DOM node</span></p>
-          <p>inputRef.current.<span className="text-accent">focus</span>(); <span className="text-muted-foreground">// Direct DOM access!</span></p>
-          <p className="text-muted-foreground mt-1">// ⚡ No re-render when ref changes!</p>
+          <p><span className="text-secondary">const</span> sectionRefs = <span className="text-primary">useRef</span>([]);</p>
+          <p className="mt-2 text-muted-foreground">{"// ——— Current ref state ———"}</p>
+          <p>inputRef.current = <span className={`font-bold ${inputFocused ? "text-green-400" : "text-primary"}`}>&lt;input /&gt;</span> {inputFocused && <span className="text-green-400">← FOCUSED!</span>}</p>
+          <p>sectionRefs.current = [</p>
+          {sections.map((s, i) => (
+            <p key={i} className="pl-4">
+              <span className={activeSection === i ? "text-accent font-bold" : "text-muted-foreground"}>
+                [{i}]: &lt;div&gt; "{s.title}" {activeSection === i && "← SCROLLED TO!"}
+              </span>
+            </p>
+          ))}
+          <p>];</p>
+          <p className="mt-2 text-muted-foreground">{"// ——— Last action ———"}</p>
+          {inputFocused && <p>inputRef.current.<span className="text-accent font-bold">focus()</span>; <span className="text-muted-foreground">{"// DOM API call"}</span></p>}
+          {activeSection !== null && <p>sectionRefs.current[<span className="text-accent">{activeSection}</span>].<span className="text-accent font-bold">scrollIntoView</span>({"{"} behavior: <span className="text-green-400">"smooth"</span> {"}"});</p>}
+          {!inputFocused && activeSection === null && <p className="text-muted-foreground/50">{"// Click a button above to see the ref in action!"}</p>}
+          <p className="mt-2 text-muted-foreground">{"// ⚡ No re-render when ref.current changes!"}</p>
         </div>
       </div>
 
       <div className="tip-box mt-4">
         <p className="text-xs text-muted-foreground">
-          🎤 <strong className="text-foreground">Key Point:</strong> "useRef gives you a .current property pointing directly to the DOM element. Unlike state, changing a ref does NOT trigger a re-render — it's a direct, imperative escape hatch from React's declarative model."
+          🎤 <strong className="text-foreground">Key Point:</strong> "Watch the code — when you click Focus or scroll to a section, we're calling DOM methods directly via ref.current. React doesn't know about these changes — refs are an escape hatch for imperative DOM operations."
         </p>
       </div>
     </div>
@@ -210,7 +215,6 @@ function StopwatchDemo() {
         <strong className="text-foreground">Real World:</strong> Timer apps, quiz countdowns, productivity tools
       </p>
 
-      {/* Timer display */}
       <div className="mb-6 text-center rounded-2xl border border-border py-8" style={{ background: "linear-gradient(180deg, hsl(225 30% 8%), hsl(225 35% 5%))" }}>
         <p className="font-display text-6xl md:text-7xl font-bold tracking-widest bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
           {formatTime(time)}
@@ -256,6 +260,7 @@ function StopwatchDemo() {
         </div>
       )}
 
+      {/* REACTIVE CODE */}
       <div className="code-window">
         <div className="code-window-header">
           <div className="code-window-dots">
@@ -263,20 +268,32 @@ function StopwatchDemo() {
             <span className="bg-accent/60" />
             <span className="bg-green-500/60" />
           </div>
-          <span className="font-mono text-xs text-muted-foreground ml-2">Why useRef for intervals?</span>
+          <span className="font-mono text-xs text-muted-foreground ml-2">🔴 Live — Start/stop to see useState vs useRef!</span>
         </div>
         <div className="code-window-body">
+          <p className="text-muted-foreground">{"// ——— useState (triggers re-render) ———"}</p>
+          <p><span className="text-secondary">const</span> [time, setTime] = <span className="text-primary">useState</span>(<span className="text-accent">{time}</span>); <span className="text-muted-foreground">{"// → "}<span className="text-primary">{formatTime(time)}</span></span></p>
+          <p><span className="text-secondary">const</span> [isRunning, setIsRunning] = <span className="text-primary">useState</span>(<span className={isRunning ? "text-green-400" : "text-destructive"}>{String(isRunning)}</span>);</p>
+          <p className="mt-2 text-muted-foreground">{"// ——— useRef (NO re-render!) ———"}</p>
           <p><span className="text-secondary">const</span> intervalRef = <span className="text-primary">useRef</span>(<span className="text-accent">null</span>);</p>
-          <p className="text-muted-foreground">// Store interval ID without re-rendering</p>
-          <p>intervalRef.current = <span className="text-primary">{intervalRef.current ? "setInterval(...)" : "null"}</span></p>
-          <p className="text-muted-foreground mt-1">// If we used useState for the interval ID,</p>
-          <p className="text-muted-foreground">// it would cause an extra re-render on start/stop!</p>
+          <p>intervalRef.current = <span className={`font-bold ${intervalRef.current ? "text-green-400" : "text-muted-foreground"}`}>{intervalRef.current ? "setInterval(...)" : "null"}</span></p>
+          <p className="mt-2 text-muted-foreground">{"// ——— Why ref for interval ID? ———"}</p>
+          <p className="text-muted-foreground">{"// time changes → re-render needed → useState ✅"}</p>
+          <p className="text-muted-foreground">{"// interval ID → hidden value → useRef ✅"}</p>
+          <p className="text-muted-foreground">{"// If we stored interval ID in state, it would"}</p>
+          <p className="text-muted-foreground">{"// cause EXTRA re-renders every start/stop!"}</p>
+          {laps.length > 0 && (
+            <>
+              <p className="mt-2 text-muted-foreground">{"// ——— Laps ———"}</p>
+              <p>laps = [<span className="text-accent">{laps.slice(0, 3).map(l => formatTime(l)).join(", ")}{laps.length > 3 ? ", ..." : ""}</span>]</p>
+            </>
+          )}
         </div>
       </div>
 
       <div className="tip-box mt-4">
         <p className="text-xs text-muted-foreground">
-          🎤 <strong className="text-foreground">useState vs useRef:</strong> "State changes trigger re-renders (needed for the timer display). But the interval ID doesn't need to appear in the UI — storing it in useRef avoids unnecessary re-renders while keeping the value persistent across renders."
+          🎤 <strong className="text-foreground">useState vs useRef:</strong> "Watch the code — time uses useState because it needs to update the UI every 10ms. But the interval ID uses useRef because it's a hidden implementation detail — storing it in state would cause an unnecessary extra re-render on every start/stop!"
         </p>
       </div>
     </div>

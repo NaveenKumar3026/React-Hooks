@@ -41,23 +41,6 @@ function LiveSearchDemo() {
       controller.abort();
     };
   }, [search]); // Re-run when search changes
-
-  return (
-    <div>
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search users..."
-      />
-      {loading ? <p>Loading...</p> : (
-        <ul>
-          {users.map((u) => (
-            <li key={u.id}>{u.name}</li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
 }
 
 // ✅ Demo 2: Window Event Tracker
@@ -94,9 +77,12 @@ function LiveSearchDemo() {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<typeof users[0] | null>(null);
   const renderCount = useRef(0);
+  const effectRunCount = useRef(0);
+  const cleanupCount = useRef(0);
   renderCount.current++;
 
   useEffect(() => {
+    effectRunCount.current++;
     setLoading(true);
     const controller = new AbortController();
     const timer = setTimeout(async () => {
@@ -110,7 +96,11 @@ function LiveSearchDemo() {
       }
       setLoading(false);
     }, 400);
-    return () => { clearTimeout(timer); controller.abort(); };
+    return () => {
+      cleanupCount.current++;
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [search]);
 
   return (
@@ -132,20 +122,6 @@ function LiveSearchDemo() {
         onChange={(e) => setSearch(e.target.value)}
         className="demo-input mb-4"
       />
-
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {[
-          { label: "search", value: `"${search}"`, color: "text-primary" },
-          { label: "renders", value: renderCount.current, color: "text-accent" },
-          { label: "dep array", value: "[search]", color: "text-secondary" },
-          { label: "results", value: users.length, color: "text-primary" },
-        ].map((stat) => (
-          <div key={stat.label} className="demo-stat-card flex-1 min-w-[80px] !p-2 !text-left">
-            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">{stat.label}</p>
-            <p className={`font-mono text-sm font-bold ${stat.color}`}>{stat.value}</p>
-          </div>
-        ))}
-      </div>
 
       {loading ? (
         <div className="flex items-center gap-3 p-6 justify-center text-sm text-muted-foreground">
@@ -188,9 +164,36 @@ function LiveSearchDemo() {
         </div>
       )}
 
+      {/* REACTIVE CODE */}
+      <div className="code-window mt-4">
+        <div className="code-window-header">
+          <div className="code-window-dots">
+            <span className="bg-destructive/60" />
+            <span className="bg-accent/60" />
+            <span className="bg-green-500/60" />
+          </div>
+          <span className="font-mono text-xs text-muted-foreground ml-2">🔴 Live — Type in search to see the effect lifecycle!</span>
+        </div>
+        <div className="code-window-body">
+          <p><span className="text-primary">useEffect</span>(() =&gt; {"{"}</p>
+          <p className="pl-4 text-muted-foreground">{"// This effect has run"} <span className="text-accent font-bold">{effectRunCount.current}</span> {"time(s)"}</p>
+          <p className="pl-4"><span className="text-secondary">const</span> controller = <span className="text-primary">new AbortController</span>();</p>
+          <p className="pl-4"><span className="text-secondary">const</span> timer = <span className="text-primary">setTimeout</span>(async () =&gt; {"{"}</p>
+          <p className="pl-8"><span className="text-secondary">await</span> fetch(<span className="text-accent">"...users"</span>, {"{"} signal {"}"});</p>
+          <p className="pl-8 text-muted-foreground">{"// search ="} <span className="text-accent">"{search}"</span> → filtered <span className="text-primary font-bold">{users.length}</span> results</p>
+          <p className="pl-4">{"}"}, <span className="text-accent">400</span>); <span className="text-muted-foreground">{"// debounce delay"}</span></p>
+          <p className="pl-4"><span className="text-secondary">return</span> () =&gt; {"{"} <span className="text-muted-foreground">{"// Cleanup (ran"} <span className="text-destructive font-bold">{cleanupCount.current}</span> {"times)"}</span></p>
+          <p className="pl-8"><span className="text-destructive">clearTimeout</span>(timer);</p>
+          <p className="pl-8">controller.<span className="text-destructive">abort</span>(); <span className="text-muted-foreground">{"// cancel in-flight request"}</span></p>
+          <p className="pl-4">{"};"}</p>
+          <p>{"}"}, [<span className="text-accent">search</span>]); <span className="text-muted-foreground">{"// ← dependency: "}<span className="text-accent">"{search}"</span></span></p>
+          <p className="mt-2 text-muted-foreground">{"// Component has rendered"} <span className="text-primary font-bold">{renderCount.current}</span> {"time(s)"}</p>
+        </div>
+      </div>
+
       <div className="tip-box mt-4">
         <p className="text-xs text-muted-foreground">
-          🎤 <strong className="text-foreground">Key Concepts:</strong> <strong>Debouncing</strong> (400ms delay before API call), <strong>AbortController</strong> (cancels pending requests on cleanup), and <strong>dependency array</strong> ([search] — effect re-runs only when search changes).
+          🎤 <strong className="text-foreground">Watch the code!</strong> Every keystroke increments the effect run count. Cleanup runs before each new effect (cancelling the previous timer). The debounce (400ms) means the fetch only fires after you stop typing. Try typing fast — you'll see cleanups outnumber fetches!
         </p>
       </div>
     </div>
@@ -259,6 +262,7 @@ function WindowTrackerDemo() {
         ))}
       </div>
 
+      {/* REACTIVE CODE */}
       <div className="code-window">
         <div className="code-window-header">
           <div className="code-window-dots">
@@ -266,18 +270,23 @@ function WindowTrackerDemo() {
             <span className="bg-accent/60" />
             <span className="bg-green-500/60" />
           </div>
-          <span className="font-mono text-xs text-muted-foreground ml-2">useEffect with cleanup</span>
+          <span className="font-mono text-xs text-muted-foreground ml-2">🔴 Live — Move mouse, resize, press keys!</span>
         </div>
         <div className="code-window-body">
           <p><span className="text-primary">useEffect</span>(() =&gt; {"{"}</p>
+          <p className="pl-4 text-muted-foreground">{"// All listeners registered on mount"}</p>
           <p className="pl-4">window.<span className="text-accent">addEventListener</span>(<span className="text-green-400">"resize"</span>, handler);</p>
+          <p className="pl-4 text-muted-foreground">{"// → Current:"} <span className="text-primary font-bold">{windowSize.w}×{windowSize.h}</span></p>
           <p className="pl-4">window.<span className="text-accent">addEventListener</span>(<span className="text-green-400">"mousemove"</span>, handler);</p>
+          <p className="pl-4 text-muted-foreground">{"// → Current:"} <span className="text-secondary font-bold">x:{mousePos.x}, y:{mousePos.y}</span></p>
           <p className="pl-4">window.<span className="text-accent">addEventListener</span>(<span className="text-green-400">"keydown"</span>, handler);</p>
-          <p className="pl-4 text-muted-foreground">// ...more listeners</p>
-          <p className="pl-4"><span className="text-secondary">return</span> () =&gt; {"{"} <span className="text-muted-foreground">// Cleanup!</span></p>
-          <p className="pl-8">window.<span className="text-destructive">removeEventListener</span>(...);</p>
-          <p className="pl-4">{"}"};</p>
-          <p>{"}"}, <span className="text-accent">[]</span>); <span className="text-muted-foreground">// Empty = mount only</span></p>
+          <p className="pl-4 text-muted-foreground">{"// → Last key:"} <span className="text-pink-400 font-bold">"{keyPressed || "none"}"</span></p>
+          <p className="pl-4">window.<span className="text-accent">addEventListener</span>(<span className="text-green-400">"scroll"</span>, handler);</p>
+          <p className="pl-4 text-muted-foreground">{"// → Scroll Y:"} <span className="text-accent font-bold">{Math.round(scrollY)}px</span></p>
+          <p className="pl-4"><span className="text-secondary">return</span> () =&gt; {"{"} <span className="text-muted-foreground">{"// Cleanup all!"}</span></p>
+          <p className="pl-8"><span className="text-destructive">removeEventListener</span>(...) × 6</p>
+          <p className="pl-4">{"};"}</p>
+          <p>{"}"}, <span className="text-accent">[]</span>); <span className="text-muted-foreground">{"// Empty = mount only, cleanup on unmount"}</span></p>
         </div>
       </div>
 
