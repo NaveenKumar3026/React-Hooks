@@ -54,50 +54,36 @@ function Navbar() {
   );
 }
 
-function Content() {
-  const { language, toggleLanguage, user, login } =
-    useContext(AppContext);
+// ✅ Demo 2: Notification System
+const NotifContext = createContext();
+
+function NotifProvider({ children }) {
+  const [notifications, setNotifications] =
+    useState([]);
+
+  const addNotification = (msg, type) => {
+    const id = Date.now();
+    setNotifications((prev) => [
+      ...prev,
+      { id, msg, type },
+    ]);
+    setTimeout(() => {
+      setNotifications((prev) =>
+        prev.filter((n) => n.id !== id)
+      );
+    }, 3000);
+  };
 
   return (
-    <div>
-      <p>
-        {language === "english"
-          ? "This is in English."
-          : "இது தமிழில் உள்ளது."}
-      </p>
-      <button onClick={toggleLanguage}>
-        Switch Language
-      </button>
-      <button onClick={user ? logout : login}>
-        {user ? "Logout" : "Login"}
-      </button>
-    </div>
-  );
-}
-
-function Footer() {
-  const { language, user } = useContext(AppContext);
-  return (
-    <footer>
-      {language === "english"
-        ? "© 2025 My Website"
-        : "© 2025 என் இணையதளம்"}
-      {user && \` • \${user.role}\`}
-    </footer>
-  );
-}
-
-// ✅ Step 4: Wrap with Provider
-function App() {
-  return (
-    <AppProvider>
-      <Navbar />
-      <Content />
-      <Footer />
-    </AppProvider>
+    <NotifContext.Provider
+      value={{ notifications, addNotification }}
+    >
+      {children}
+    </NotifContext.Provider>
   );
 }`;
 
+// ===== DEMO 1: Theme + Language + Auth =====
 type Theme = "light" | "dark" | "ocean";
 interface AppContextType {
   theme: Theme;
@@ -200,10 +186,6 @@ function DemoContent() {
           </button>
         ))}
       </div>
-
-      <p className="font-mono text-[10px] text-muted-foreground/60">
-        {"<Content />"} → useContext(AppContext) → All controls, no props passed!
-      </p>
     </div>
   );
 }
@@ -217,9 +199,36 @@ function DemoFooter() {
         📝 {language === "english" ? "© 2025 My Website" : "© 2025 என் இணையதளம்"}
         {user && ` • Logged in as ${user.role}`}
       </p>
-      <p className="mt-1.5 font-mono text-[10px] text-muted-foreground/60">
-        {"<Footer />"} → useContext(AppContext) → reads theme, lang, user
-      </p>
+    </div>
+  );
+}
+
+function ContextCodeWindow() {
+  const { theme, language, user } = useContext(AppContext);
+  return (
+    <div className="code-window mt-4">
+      <div className="code-window-header">
+        <div className="code-window-dots">
+          <span className="bg-destructive/60" />
+          <span className="bg-accent/60" />
+          <span className="bg-green-500/60" />
+        </div>
+        <span className="font-mono text-xs text-muted-foreground ml-2">🔴 Live — Change theme/language/auth to see context update!</span>
+      </div>
+      <div className="code-window-body">
+        <p className="text-muted-foreground">{"// ——— Context Provider value ———"}</p>
+        <p>{"<"}AppContext.Provider value={"{"}{"{"}...</p>
+        <p className="pl-4">theme: <span className={`font-bold ${theme === "dark" ? "text-primary" : theme === "light" ? "text-accent" : "text-blue-400"}`}>"{theme}"</span>,</p>
+        <p className="pl-4">language: <span className="text-accent font-bold">"{language}"</span>,</p>
+        <p className="pl-4">user: <span className={`font-bold ${user ? "text-green-400" : "text-destructive"}`}>{user ? `{ name: "${user.name}", role: "${user.role}" }` : "null"}</span>,</p>
+        <p>{"}"}{"}"}&gt;</p>
+        <p className="mt-2 text-muted-foreground">{"// ——— Consumers (all auto-update!) ———"}</p>
+        <p>{"<"}<span className="text-primary">Navbar</span> /&gt; → reads: theme, language, user</p>
+        <p>{"<"}<span className="text-secondary">Content</span> /&gt; → reads: ALL + controls</p>
+        <p>{"<"}<span className="text-accent">Footer</span> /&gt; → reads: theme, language, user</p>
+        <p className="mt-2 text-muted-foreground">{"// ⚡ No props passed! No prop drilling!"}</p>
+        <p className="text-muted-foreground">{"// All 3 components read from the SAME context"}</p>
+      </div>
     </div>
   );
 }
@@ -229,7 +238,7 @@ function FullDemo() {
     <div className="demo-container">
       <div className="flex items-center gap-3 mb-1">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-pink-500/15 to-secondary/10 px-3 py-1 text-xs font-semibold text-pink-400 border border-pink-500/20">
-          🌐 Live Demo
+          🌐 Demo 1
         </span>
       </div>
       <h3 className="mb-1 font-display text-xl font-semibold">Multi-Feature Context: Theme + Language + Auth</h3>
@@ -248,26 +257,191 @@ function FullDemo() {
           <div className="text-center">
             <span className="font-mono text-xs text-primary/60 bg-primary/5 px-4 py-1.5 rounded-full border border-primary/15">{"</AppProvider>"}</span>
           </div>
+          <ContextCodeWindow />
         </div>
       </AppProvider>
 
-      {/* Comparison */}
       <div className="mt-5 space-y-2">
         <div className="rounded-xl border border-destructive/20 p-4" style={{ background: "linear-gradient(135deg, hsl(0 84% 60% / 0.05), transparent)" }}>
           <p className="text-xs font-bold text-destructive mb-1">❌ Without Context (Prop Drilling):</p>
           <p className="font-mono text-xs text-muted-foreground">{"<App theme lang user>"} → {"<Layout theme lang user>"} → {"<Page theme lang user>"} → {"<Navbar theme lang user>"}</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">Every intermediate component must pass props it doesn't use!</p>
         </div>
         <div className="rounded-xl border border-green-500/20 p-4" style={{ background: "linear-gradient(135deg, hsl(140 70% 50% / 0.05), transparent)" }}>
           <p className="text-xs font-bold text-green-400 mb-1">✅ With Context:</p>
           <p className="font-mono text-xs text-muted-foreground">{"<Provider>"} → any child calls <span className="text-primary">useContext()</span> directly ✓</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">Components only access what they need. No unnecessary prop passing!</p>
         </div>
       </div>
 
       <div className="tip-box mt-4">
         <p className="text-xs text-muted-foreground">
-          🎤 <strong className="text-foreground">Key Insight:</strong> "Three components (Navbar, Content, Footer) all read from the same Context. When Content changes the theme or language, Navbar and Footer update instantly — no props are passed between siblings. Context eliminates prop drilling entirely."
+          🎤 <strong className="text-foreground">Key Insight:</strong> "Three components (Navbar, Content, Footer) all read from the same Context. When Content changes the theme or language, Navbar and Footer update instantly — no props are passed between siblings!"
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ===== DEMO 2: Notification System =====
+interface Notification {
+  id: number;
+  message: string;
+  type: "success" | "error" | "info" | "warning";
+}
+
+interface NotifContextType {
+  notifications: Notification[];
+  addNotification: (msg: string, type: Notification["type"]) => void;
+  clearAll: () => void;
+}
+
+const NotifContext = createContext<NotifContextType>({} as NotifContextType);
+
+function NotifProvider({ children }: { children: React.ReactNode }) {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const addNotification = (message: string, type: Notification["type"]) => {
+    const id = Date.now();
+    setNotifications((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    }, 4000);
+  };
+
+  const clearAll = () => setNotifications([]);
+
+  return (
+    <NotifContext.Provider value={{ notifications, addNotification, clearAll }}>
+      {children}
+    </NotifContext.Provider>
+  );
+}
+
+const notifStyles: Record<Notification["type"], { icon: string; border: string; bg: string; text: string }> = {
+  success: { icon: "✅", border: "border-green-500/30", bg: "linear-gradient(135deg, hsl(140 70% 50% / 0.1), hsl(140 70% 50% / 0.03))", text: "text-green-400" },
+  error: { icon: "❌", border: "border-destructive/30", bg: "linear-gradient(135deg, hsl(0 84% 60% / 0.1), hsl(0 84% 60% / 0.03))", text: "text-destructive" },
+  info: { icon: "ℹ️", border: "border-primary/30", bg: "linear-gradient(135deg, hsl(193 92% 55% / 0.1), hsl(193 92% 55% / 0.03))", text: "text-primary" },
+  warning: { icon: "⚠️", border: "border-accent/30", bg: "linear-gradient(135deg, hsl(51 97% 55% / 0.1), hsl(51 97% 55% / 0.03))", text: "text-accent" },
+};
+
+function NotifDisplay() {
+  const { notifications } = useContext(NotifContext);
+  if (notifications.length === 0) return null;
+  return (
+    <div className="space-y-2">
+      {notifications.map((n) => {
+        const s = notifStyles[n.type];
+        return (
+          <div key={n.id} className={`rounded-xl border ${s.border} px-4 py-3 flex items-center gap-3 transition-all duration-300 animate-in slide-in-from-right`} style={{ background: s.bg }}>
+            <span className="text-lg">{s.icon}</span>
+            <p className={`text-sm font-semibold ${s.text}`}>{n.message}</p>
+            <span className="ml-auto text-[10px] text-muted-foreground/50">auto-dismiss 4s</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function NotifActions() {
+  const { addNotification, clearAll, notifications } = useContext(NotifContext);
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={() => addNotification("Order placed successfully!", "success")}
+          className="rounded-xl border border-green-500/30 px-4 py-3 text-sm font-semibold text-green-400 transition-all hover:bg-green-500/10"
+          style={{ background: "linear-gradient(135deg, hsl(140 70% 50% / 0.05), transparent)" }}
+        >
+          ✅ Success Toast
+        </button>
+        <button
+          onClick={() => addNotification("Payment failed! Try again.", "error")}
+          className="rounded-xl border border-destructive/30 px-4 py-3 text-sm font-semibold text-destructive transition-all hover:bg-destructive/10"
+          style={{ background: "linear-gradient(135deg, hsl(0 84% 60% / 0.05), transparent)" }}
+        >
+          ❌ Error Toast
+        </button>
+        <button
+          onClick={() => addNotification("New update available!", "info")}
+          className="rounded-xl border border-primary/30 px-4 py-3 text-sm font-semibold text-primary transition-all hover:bg-primary/10"
+          style={{ background: "linear-gradient(135deg, hsl(193 92% 55% / 0.05), transparent)" }}
+        >
+          ℹ️ Info Toast
+        </button>
+        <button
+          onClick={() => addNotification("Storage almost full!", "warning")}
+          className="rounded-xl border border-accent/30 px-4 py-3 text-sm font-semibold text-accent transition-all hover:bg-accent/10"
+          style={{ background: "linear-gradient(135deg, hsl(51 97% 55% / 0.05), transparent)" }}
+        >
+          ⚠️ Warning Toast
+        </button>
+      </div>
+      {notifications.length > 0 && (
+        <button onClick={clearAll} className="w-full rounded-xl border border-border px-4 py-2 text-xs text-muted-foreground hover:bg-muted/20 transition-colors">
+          Clear All ({notifications.length})
+        </button>
+      )}
+    </div>
+  );
+}
+
+function NotifCodeWindow() {
+  const { notifications } = useContext(NotifContext);
+  return (
+    <div className="code-window mt-4">
+      <div className="code-window-header">
+        <div className="code-window-dots">
+          <span className="bg-destructive/60" />
+          <span className="bg-accent/60" />
+          <span className="bg-green-500/60" />
+        </div>
+        <span className="font-mono text-xs text-muted-foreground ml-2">🔴 Live — Click buttons to see notifications in context!</span>
+      </div>
+      <div className="code-window-body">
+        <p className="text-muted-foreground">{"// ——— NotifContext state ———"}</p>
+        <p><span className="text-secondary">const</span> {"{"} notifications {"}"} = <span className="text-primary">useContext</span>(NotifContext);</p>
+        <p className="mt-2">notifications = [</p>
+        {notifications.length === 0 && <p className="pl-4 text-muted-foreground/50">{"// empty — click a button to add!"}</p>}
+        {notifications.map((n, i) => (
+          <p key={n.id} className="pl-4">
+            {"{"} id: <span className="text-muted-foreground">{n.id}</span>, type: <span className={notifStyles[n.type].text}>"{n.type}"</span>, msg: <span className="text-accent">"{n.message.slice(0, 30)}"</span> {"}"}{i < notifications.length - 1 ? "," : ""}
+          </p>
+        ))}
+        <p>];</p>
+        <p className="mt-2 text-muted-foreground">{"// ——— How it works ———"}</p>
+        <p>notifications.<span className="text-accent">length</span> = <span className="text-primary font-bold">{notifications.length}</span></p>
+        <p className="text-muted-foreground">{"// addNotification() → updates context → "}</p>
+        <p className="text-muted-foreground">{"// NotifDisplay re-renders automatically!"}</p>
+        <p className="text-muted-foreground">{"// setTimeout(4s) → auto-removes from array"}</p>
+      </div>
+    </div>
+  );
+}
+
+function NotificationDemo() {
+  return (
+    <div className="demo-container">
+      <div className="flex items-center gap-3 mb-1">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-green-500/15 to-primary/10 px-3 py-1 text-xs font-semibold text-green-400 border border-green-500/20">
+          🔔 Demo 2
+        </span>
+      </div>
+      <h3 className="mb-1 font-display text-xl font-semibold">Notification / Toast System</h3>
+      <p className="mb-5 text-sm text-muted-foreground">
+        <strong className="text-foreground">Real World:</strong> Toast notifications in apps — any component can trigger, one component displays
+      </p>
+
+      <NotifProvider>
+        <div className="space-y-4">
+          <NotifDisplay />
+          <NotifActions />
+          <NotifCodeWindow />
+        </div>
+      </NotifProvider>
+
+      <div className="tip-box mt-4">
+        <p className="text-xs text-muted-foreground">
+          🎤 <strong className="text-foreground">Why Context?</strong> "The action buttons and the notification display are separate components — they don't share any parent props. Context lets the buttons <em>write</em> notifications and the display <em>read</em> them, without any prop drilling. This is exactly how real toast libraries work!"
         </p>
       </div>
     </div>
@@ -370,6 +544,7 @@ const value = useMemo(
     codeExample={useContextCode}
   >
     <FullDemo />
+    <NotificationDemo />
   </HookLayout>
 );
 

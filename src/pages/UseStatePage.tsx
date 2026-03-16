@@ -156,7 +156,7 @@ function PasswordDemo() {
         {showPassword ? "🙈 Hide Password" : "👁️ Show Password"}
       </button>
 
-      {/* Live state display */}
+      {/* REACTIVE CODE - updates live as user interacts */}
       <div className="code-window">
         <div className="code-window-header">
           <div className="code-window-dots">
@@ -164,19 +164,26 @@ function PasswordDemo() {
             <span className="bg-accent/60" />
             <span className="bg-green-500/60" />
           </div>
-          <span className="font-mono text-xs text-muted-foreground ml-2">Live State Values</span>
+          <span className="font-mono text-xs text-muted-foreground ml-2">🔴 Live — Code updates as you interact!</span>
         </div>
         <div className="code-window-body">
-          <p><span className="text-secondary">const</span> [password, setPassword] = <span className="text-primary">useState</span>(<span className="text-accent">"{password}"</span>);</p>
-          <p><span className="text-secondary">const</span> [showPassword, setShowPassword] = <span className="text-primary">useState</span>(<span className="text-accent">{String(showPassword)}</span>);</p>
-          <p className="text-muted-foreground">// Derived value (computed, not stored):</p>
-          <p><span className="text-secondary">const</span> strength = getStrength(password); <span className="text-muted-foreground">// → </span><span className="text-accent">{strength}/4</span></p>
+          <p><span className="text-secondary">const</span> [password, setPassword] = <span className="text-primary">useState</span>(<span className="text-accent">""</span>);</p>
+          <p><span className="text-secondary">const</span> [showPassword, setShowPassword] = <span className="text-primary">useState</span>(<span className="text-accent">false</span>);</p>
+          <p className="mt-2 text-muted-foreground">{"// ——— Current state values ———"}</p>
+          <p>password = <span className="text-accent transition-all">"{password}"</span></p>
+          <p>showPassword = <span className={`transition-all ${showPassword ? "text-green-400" : "text-destructive"}`}>{String(showPassword)}</span></p>
+          <p>input type = <span className="text-primary">"{showPassword ? "text" : "password"}"</span></p>
+          <p className="mt-2 text-muted-foreground">{"// ——— Derived (computed, not stored) ———"}</p>
+          <p><span className="text-secondary">const</span> strength = getStrength(password);</p>
+          <p>strength = <span className="text-accent font-bold">{strength}</span> / 4 → <span className="text-primary">"{strengthLabels[strength]}"</span></p>
+          <p className="mt-2 text-muted-foreground">{"// ——— What happens on click ———"}</p>
+          <p><span className="text-secondary">setShowPassword</span>(!{String(showPassword)}) → will become <span className="text-accent">{String(!showPassword)}</span></p>
         </div>
       </div>
 
       <div className="tip-box mt-4">
         <p className="text-xs text-muted-foreground">
-          🎤 <strong className="text-foreground">Seminar Point:</strong> "useState stores the password string and a visibility boolean. The strength is <em>derived</em> from state — computed on each render, not stored separately. This is a key React pattern!"
+          🎤 <strong className="text-foreground">Seminar Point:</strong> "Watch the code window above — every time you type or click, the state values update in real-time. That's exactly what React does internally: state changes → re-render → UI updates!"
         </p>
       </div>
     </div>
@@ -269,7 +276,7 @@ function ShoppingCartDemo() {
         </div>
       )}
 
-      {/* Live state */}
+      {/* REACTIVE CODE */}
       <div className="code-window">
         <div className="code-window-header">
           <div className="code-window-dots">
@@ -277,21 +284,35 @@ function ShoppingCartDemo() {
             <span className="bg-accent/60" />
             <span className="bg-green-500/60" />
           </div>
-          <span className="font-mono text-xs text-muted-foreground ml-2">State Inspector</span>
+          <span className="font-mono text-xs text-muted-foreground ml-2">🔴 Live — Add/remove items to see code change!</span>
         </div>
         <div className="code-window-body">
           <p><span className="text-secondary">const</span> [cart, setCart] = <span className="text-primary">useState</span>([]);</p>
-          <p className="text-muted-foreground">// Current state:</p>
-          <p>cart.length = <span className="text-accent">{cart.length}</span></p>
-          <p>totalItems = <span className="text-accent">{totalItems}</span></p>
-          <p>total = <span className="text-primary">${total.toFixed(2)}</span></p>
-          {cart.length > 0 && <p className="text-muted-foreground">// cart = [{cart.map(i => `{name:"${i.name}",qty:${i.qty}}`).join(", ")}]</p>}
+          <p className="mt-2 text-muted-foreground">{"// ——— Current cart state ———"}</p>
+          <p>cart = [</p>
+          {cart.length === 0 && <p className="pl-4 text-muted-foreground/50">{"// empty — click a product to add!"}</p>}
+          {cart.map((item, i) => (
+            <p key={item.name} className="pl-4">
+              {"{"} name: <span className="text-accent">"{item.name}"</span>, price: <span className="text-primary">{item.price}</span>, qty: <span className="text-accent font-bold">{item.qty}</span> {"}"}{i < cart.length - 1 ? "," : ""}
+            </p>
+          ))}
+          <p>];</p>
+          <p className="mt-2 text-muted-foreground">{"// ——— Derived values ———"}</p>
+          <p>cart.<span className="text-accent">length</span> = <span className="text-primary font-bold">{cart.length}</span></p>
+          <p>totalItems = <span className="text-primary font-bold">{totalItems}</span></p>
+          <p>total = <span className="text-accent font-bold">${total.toFixed(2)}</span></p>
+          {cart.length > 0 && (
+            <>
+              <p className="mt-2 text-muted-foreground">{"// ——— Last operation ———"}</p>
+              <p><span className="text-secondary">setCart</span>(prev {"=>"} [...prev, {"{"} ...product, qty: 1 {"}"}]);</p>
+            </>
+          )}
         </div>
       </div>
 
       <div className="tip-box mt-4">
         <p className="text-xs text-muted-foreground">
-          🎤 <strong className="text-foreground">Key Concept:</strong> "We use <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-primary">setState(prev =&gt; ...)</code> for safe updates based on previous state. The spread operator <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-primary">[...prev, newItem]</code> ensures immutability — React can detect the change!"
+          🎤 <strong className="text-foreground">Key Concept:</strong> "Watch the code — every item you add creates a new array with <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-primary">[...prev, newItem]</code>. React detects the new reference and re-renders. The code window shows you exactly what's inside state at every moment!"
         </p>
       </div>
     </div>
@@ -377,7 +398,7 @@ useEffect(() => {
       { q: "What happens when you call setState?", a: "React schedules a re-render (batched for performance). On the next render, the component function runs again, useState returns the new value, and React diffs the virtual DOM to update only what changed in the real DOM." },
       { q: "Why use functional updates (prev => ...)?", a: "When the new state depends on the previous value (like incrementing), functional updates ensure you get the latest value — critical when multiple updates happen in the same render cycle or in async callbacks." },
       { q: "Can you use useState with objects and arrays?", a: "Yes, but you must create new references when updating. Use spread: setState(prev => ({...prev, key: val})) for objects, setState(prev => [...prev, item]) for arrays. Never mutate directly." },
-      { q: "What is lazy initialization?", a: "Passing a function to useState: useState(() => compute()). The function runs only on the first render. Useful for expensive operations like parsing localStorage or computing derived initial values." },
+      { q: "What is lazy initialization?", a: "Passing a function to useState: useState(() => expensiveComputation()). The function only runs on the first render, not on every re-render. Useful for reading localStorage, parsing JSON, or heavy calculations." },
     ]}
     codeExample={useStateCode}
   >
